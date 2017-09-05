@@ -102,4 +102,12 @@ config SMB1398_CHARGER
 	      wireless charger receiver and provide the input for downstream
 	      chargers.
 
+config SMB1390_CHARGE_PUMP
+	tristate "SMB1390 Charge Pump"
+	depends on MFD_I2C_PMIC
+	help
+	  Say Y to include support for SMB1390 Charge Pump.
+	  SMB1390 is a div2 charge pump capable of delivering 6A charge current
+	  with very high efficiency.
+
 endmenu
