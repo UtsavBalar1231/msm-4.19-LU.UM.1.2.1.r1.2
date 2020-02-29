@@ -44,6 +44,8 @@ struct cpu_cooling_ops {
 struct thermal_cooling_device *
 cpufreq_cooling_register(struct cpufreq_policy *policy);
 
+void cpu_limits_set_level(unsigned int cpu, unsigned int max_freq);
+
 /**
  * cpufreq_platform_cooling_register - create cpufreq cooling device with
  * additional platform specific mitigation function.
