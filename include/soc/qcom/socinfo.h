@@ -173,7 +173,6 @@ enum pmic_model {
 #define HW_MAJOR_VERSION_B  9
 #define HW_MINOR_VERSION_B  1
 
-
 #define HW_MAJOR_VERSION_SHIFT 16
 #define HW_MAJOR_VERSION_MASK  0xFFFF0000
 #define HW_MINOR_VERSION_SHIFT 0
