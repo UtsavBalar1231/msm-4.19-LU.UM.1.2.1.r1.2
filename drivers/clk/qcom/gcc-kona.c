@@ -4040,6 +4040,39 @@ static struct clk_branch gcc_video_xo_clk = {
 	},
 };
 
+/* Measure-only clock for gcc_cfg_noc_ahb_clk. */
+static struct clk_dummy measure_only_cnoc_clk = {
+	.rrate = 1000,
+	.hw.init = &(struct clk_init_data){
+		.name = "measure_only_cnoc_clk",
+		.ops = &clk_dummy_ops,
+	},
+};
+
+/* Measure-only clock for gcc_ipa_2x_clk. */
+static struct clk_dummy measure_only_ipa_2x_clk = {
+	.rrate = 1000,
+	.hw.init = &(struct clk_init_data){
+		.name = "measure_only_ipa_2x_clk",
+		.ops = &clk_dummy_ops,
+	},
+};
+
+/* Measure-only clock for gcc_sys_noc_axi_clk. */
+static struct clk_dummy measure_only_snoc_clk = {
+	.rrate = 1000,
+	.hw.init = &(struct clk_init_data){
+		.name = "measure_only_snoc_clk",
+		.ops = &clk_dummy_ops,
+	},
+};
+
+struct clk_hw *gcc_kona_hws[] = {
+	[MEASURE_ONLY_CNOC_CLK] = &measure_only_cnoc_clk.hw,
+	[MEASURE_ONLY_IPA_2X_CLK] = &measure_only_ipa_2x_clk.hw,
+	[MEASURE_ONLY_SNOC_CLK] = &measure_only_snoc_clk.hw,
+};
+
 static struct clk_regmap *gcc_kona_clocks[] = {
 	[GCC_AGGRE_NOC_PCIE_TBU_CLK] = &gcc_aggre_noc_pcie_tbu_clk.clkr,
 	[GCC_AGGRE_UFS_CARD_AXI_CLK] = &gcc_aggre_ufs_card_axi_clk.clkr,

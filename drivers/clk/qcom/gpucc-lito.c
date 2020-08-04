@@ -271,17 +271,40 @@ static struct clk_branch gpu_cc_sleep_clk = {
 	},
 };
 
-static struct clk_branch gpu_cc_hlos1_vote_gpu_smmu_clk = {
-	.halt_reg = 0x5000,
-	.halt_check = BRANCH_VOTED,
-	.clkr = {
-		.enable_reg = 0x5000,
-		.enable_mask = BIT(0),
-		.hw.init = &(struct clk_init_data){
-			 .name = "gpu_cc_hlos1_vote_gpu_smmu_clk",
-			 .ops = &clk_branch2_ops,
-		},
+/* Measure-only clock for gpu_cc_cx_gfx3d_clk. */
+static struct clk_dummy measure_only_gpu_cc_cx_gfx3d_clk = {
+	.rrate = 1000,
+	.hw.init = &(struct clk_init_data){
+		.name = "measure_only_gpu_cc_cx_gfx3d_clk",
+		.ops = &clk_dummy_ops,
 	},
+};
+
+/* Measure-only clock for gpu_cc_cx_gfx3d_slv_clk. */
+static struct clk_dummy measure_only_gpu_cc_cx_gfx3d_slv_clk = {
+	.rrate = 1000,
+	.hw.init = &(struct clk_init_data){
+		.name = "measure_only_gpu_cc_cx_gfx3d_slv_clk",
+		.ops = &clk_dummy_ops,
+	},
+};
+
+/* Measure-only clock for gpu_cc_gx_gfx3d_clk. */
+static struct clk_dummy measure_only_gpu_cc_gx_gfx3d_clk = {
+	.rrate = 1000,
+	.hw.init = &(struct clk_init_data){
+		.name = "measure_only_gpu_cc_gx_gfx3d_clk",
+		.ops = &clk_dummy_ops,
+	},
+};
+
+struct clk_hw *gpu_cc_lito_hws[] = {
+	[MEASURE_ONLY_GPU_CC_CX_GFX3D_CLK] =
+		&measure_only_gpu_cc_cx_gfx3d_clk.hw,
+	[MEASURE_ONLY_GPU_CC_CX_GFX3D_SLV_CLK] =
+		&measure_only_gpu_cc_cx_gfx3d_slv_clk.hw,
+	[MEASURE_ONLY_GPU_CC_GX_GFX3D_CLK] =
+		&measure_only_gpu_cc_gx_gfx3d_clk.hw,
 };
 
 static struct clk_regmap *gpu_cc_lito_clocks[] = {
@@ -297,7 +320,6 @@ static struct clk_regmap *gpu_cc_lito_clocks[] = {
 	[GPU_CC_GX_VSENSE_CLK] = &gpu_cc_gx_vsense_clk.clkr,
 	[GPU_CC_PLL1] = &gpu_cc_pll1.clkr,
 	[GPU_CC_SLEEP_CLK] = &gpu_cc_sleep_clk.clkr,
-	[GPU_CC_HLOS1_VOTE_GPU_SMMU_CLK] = &gpu_cc_hlos1_vote_gpu_smmu_clk.clkr,
 };
 
 static const struct regmap_config gpu_cc_lito_regmap_config = {
@@ -310,6 +332,8 @@ static const struct regmap_config gpu_cc_lito_regmap_config = {
 
 static const struct qcom_cc_desc gpu_cc_lito_desc = {
 	.config = &gpu_cc_lito_regmap_config,
+	.hwclks = gpu_cc_lito_hws,
+	.num_hwclks = ARRAY_SIZE(gpu_cc_lito_hws),
 	.clks = gpu_cc_lito_clocks,
 	.num_clks = ARRAY_SIZE(gpu_cc_lito_clocks),
 };
