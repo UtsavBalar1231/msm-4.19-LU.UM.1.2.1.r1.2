@@ -601,8 +601,8 @@ static const struct dev_pm_ops scc_sa8155_pm_ops = {
 static void scc_sa8195_fixup(struct platform_device *pdev)
 {
 	if (of_device_is_compatible(pdev->dev.of_node, "qcom,scc-sa8195")) {
-		vdd_scc_cx.num_levels = VDD_MM_NUM;
-		vdd_scc_cx.cur_level = VDD_MM_NUM;
+		vdd_scc_cx.num_levels = VDD_NUM_MM;
+		vdd_scc_cx.cur_level = VDD_NUM_MM;
 	}
 }
 
