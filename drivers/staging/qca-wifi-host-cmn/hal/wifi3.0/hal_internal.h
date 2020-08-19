@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2016-2019 The Linux Foundation. All rights reserved.
+ * Copyright (C) 2020 XiaoMi, Inc.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -191,7 +192,8 @@ struct hal_soc;
  * struct hal_reg_write_q_elem - delayed register write queue element
  * @srng: hal_srng queued for a delayed write
  * @addr: iomem address of the register
- * @val: register value at the time of delayed write enqueue
+ * @enqueue_val: register value at the time of delayed write enqueue
+ * @dequeue_val: register value at the time of delayed write dequeue
  * @valid: whether this entry is valid or not
  * @enqueue_time: enqueue time (qdf_log_timestamp)
  * @dequeue_time: dequeue time (qdf_log_timestamp)
@@ -199,9 +201,11 @@ struct hal_soc;
 struct hal_reg_write_q_elem {
 	struct hal_srng *srng;
 	void __iomem *addr;
-	uint32_t val;
+	uint32_t enqueue_val;
+	uint32_t dequeue_val;
 	uint8_t valid;
 	qdf_time_t enqueue_time;
+        qdf_time_t work_scheduled_time;
 	qdf_time_t dequeue_time;
 };
 
@@ -563,6 +567,7 @@ struct hal_soc {
 	/* read index used by worker thread to dequeue/write registers */
 	uint32_t read_idx;
 #endif
+	qdf_atomic_t active_work_cnt;
 };
 
 #ifdef FEATURE_HAL_DELAYED_REG_WRITE

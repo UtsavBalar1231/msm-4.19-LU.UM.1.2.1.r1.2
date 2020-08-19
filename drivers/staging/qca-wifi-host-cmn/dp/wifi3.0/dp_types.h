@@ -780,6 +780,10 @@ struct dp_soc_stats {
 			uint32_t reo_err_oor_drop;
 			/* REO OOR msdu indicated to stack count */
 			uint32_t reo_err_oor_to_stack;
+			/* REO OOR scattered msdu count */
+			uint32_t reo_err_oor_sg_count;
+			/* RX msdu rejected count on delivery to vdev stack_fn*/
+			uint32_t rejected;
 		} err;
 
 		/* packet count per core - per ring */

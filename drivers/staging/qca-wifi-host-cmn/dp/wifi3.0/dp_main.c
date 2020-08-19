@@ -80,6 +80,13 @@ cdp_dump_flow_pool_info(struct cdp_soc_t *soc)
 #define DEINIT_RX_HW_STATS_LOCK(_soc) /* no op */
 #endif
 
+#ifdef DP_PEER_EXTENDED_API
+#define SET_PEER_REF_CNT_ONE(_peer) \
+	qdf_atomic_set(&(_peer)->ref_cnt, 1)
+#else
+#define SET_PEER_REF_CNT_ONE(_peer)
+#endif
+
 #ifdef WLAN_FEATURE_DP_EVENT_HISTORY
 /*
  * If WLAN_CFG_INT_NUM_CONTEXTS is changed, HIF_NUM_INT_CONTEXTS
@@ -3128,8 +3135,6 @@ static void dp_soc_cmn_cleanup(struct dp_soc *soc)
 	dp_tx_soc_detach(soc);
 
 	qdf_spinlock_destroy(&soc->rx.defrag.defrag_lock);
-
-	dp_reo_cmdlist_destroy(soc);
 	qdf_spinlock_destroy(&soc->rx.reo_cmd_lock);
 }
 
@@ -3742,8 +3747,10 @@ wdi_attach_fail:
 
 fail2:
 	dp_rx_pdev_detach(pdev);
+	dp_ipa_uc_detach(soc, pdev);
 
 fail1:
+	soc->pdev_count--;
 	if (pdev->invalid_peer)
 		qdf_mem_free(pdev->invalid_peer);
 	dp_pdev_detach((struct cdp_pdev *)pdev, 0);
@@ -4026,6 +4033,11 @@ static void dp_pdev_deinit(struct cdp_pdev *txrx_pdev, int force)
 	dp_cal_client_detach(&pdev->cal_client_ctx);
 
 	soc->pdev_count--;
+
+	/* only do soc common cleanup when last pdev do detach */
+	if (!(soc->pdev_count))
+		dp_reo_cmdlist_destroy(soc);
+
 	wlan_cfg_pdev_detach(pdev->wlan_cfg_ctx);
 	if (pdev->invalid_peer)
 		qdf_mem_free(pdev->invalid_peer);
@@ -4105,6 +4117,10 @@ static void dp_pdev_detach(struct cdp_pdev *txrx_pdev, int force)
 		dp_rx_desc_pool_free(soc, rx_desc_pool);
 	}
 
+	/* only do soc common cleanup when last pdev do detach */
+	if (!(soc->pdev_count))
+		dp_soc_cmn_cleanup(soc);
+
 	soc->pdev_list[pdev->pdev_id] = NULL;
 	qdf_mem_free(pdev);
 }
@@ -4127,11 +4143,6 @@ static void dp_pdev_detach_wifi3(struct cdp_pdev *txrx_pdev, int force)
 		dp_pdev_deinit(txrx_pdev, force);
 		dp_pdev_detach(txrx_pdev, force);
 	}
-
-	/* only do soc common cleanup when last pdev do detach */
-	if (!(soc->pdev_count))
-		dp_soc_cmn_cleanup(soc);
-
 }
 
 /*
@@ -5005,6 +5016,12 @@ static void dp_vdev_flush_peers(struct cdp_vdev *vdev_handle, bool unmap_only)
 		if (!peer)
 			continue;
 
+		dp_info("peer ref cnt %d", qdf_atomic_read(&peer->ref_cnt));
+		/*
+		 * set ref count to one to force delete the peers
+		 * with ref count leak
+		 */
+		SET_PEER_REF_CNT_ONE(peer);
 		dp_info("peer: %pM is getting unmap",
 			peer->mac_addr.raw);
 		/* free AST entries of peer */
@@ -6091,7 +6108,6 @@ void dp_peer_unref_delete(void *peer_handle)
 #ifdef PEER_CACHE_RX_PKTS
 static inline void dp_peer_rx_bufq_resources_deinit(struct dp_peer *peer)
 {
-	dp_rx_flush_rx_cached(peer, true);
 	qdf_list_destroy(&peer->bufq_info.cached_bufq);
 	qdf_spinlock_destroy(&peer->bufq_info.bufq_lock);
 }
@@ -6110,6 +6126,7 @@ static inline void dp_peer_rx_bufq_resources_deinit(struct dp_peer *peer)
 static void dp_peer_delete_wifi3(void *peer_handle, uint32_t bitmap)
 {
 	struct dp_peer *peer = (struct dp_peer *)peer_handle;
+	struct dp_soc *soc = peer->vdev->pdev->soc;
 
 	/* redirect the peer's rx delivery function to point to a
 	 * discard func
@@ -6137,6 +6154,9 @@ static void dp_peer_delete_wifi3(void *peer_handle, uint32_t bitmap)
 		FL("peer %pK (%pM)"),  peer, peer->mac_addr.raw);
 
 	dp_local_peer_id_free(peer->vdev->pdev, peer);
+
+	/* Drop all rx packets before deleting peer */
+	dp_clear_peer_internal(soc, peer);
 
 	dp_peer_rx_bufq_resources_deinit(peer);
 
@@ -9872,10 +9892,37 @@ static void dp_process_wow_ack_rsp(struct cdp_soc_t *soc_hdl,
 	}
 }
 
+/**
+ * dp_process_target_suspend_req() - process target suspend request
+ * @soc_hdl: datapath soc handle
+ * @pdev_id: data path pdev handle id
+ *
+ * Return: none
+ */
+static void dp_process_target_suspend_req(struct cdp_soc_t *soc_hdl,
+					  struct cdp_pdev *opaque_pdev)
+{
+	struct dp_soc *soc = (struct dp_soc *)soc_hdl;
+	struct dp_pdev *pdev = (struct dp_pdev *)opaque_pdev;
+
+	if (qdf_unlikely(!pdev)) {
+		dp_err("pdev is NULL");
+		return;
+	}
+
+	/* Stop monitor reap timer and reap any pending frames in ring */
+	if (pdev->rx_pktlog_mode != DP_RX_PKTLOG_DISABLED &&
+	    soc->reap_timer_init) {
+		qdf_timer_sync_cancel(&soc->mon_reap_timer);
+		dp_service_mon_rings(soc, DP_MON_REAP_BUDGET);
+	}
+}
+
 static struct cdp_bus_ops dp_ops_bus = {
 	.bus_suspend = dp_bus_suspend,
 	.bus_resume = dp_bus_resume,
 	.process_wow_ack_rsp = dp_process_wow_ack_rsp,
+	.process_target_suspend_req = dp_process_target_suspend_req
 };
 
 static struct cdp_ocb_ops dp_ops_ocb = {

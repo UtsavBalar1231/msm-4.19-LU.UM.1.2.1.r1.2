@@ -4589,7 +4589,8 @@ dp_print_ring_stats(struct dp_pdev *pdev)
 	uint32_t i;
 	int mac_id;
 
-	if (hif_pm_runtime_get_sync(pdev->soc->hif_handle))
+	if (hif_pm_runtime_get_sync(pdev->soc->hif_handle,
+				    RTPM_ID_DP_PRINT_RING_STATS))
 		return;
 
 	dp_print_ring_stat_from_hal(pdev->soc,
@@ -4651,7 +4652,8 @@ dp_print_ring_stats(struct dp_pdev *pdev)
 					    &pdev->rxdma_err_dst_ring[i],
 					    RXDMA_DST);
 
-	hif_pm_runtime_put(pdev->soc->hif_handle);
+	hif_pm_runtime_put(pdev->soc->hif_handle,
+			   RTPM_ID_DP_PRINT_RING_STATS);
 }
 
 /**
@@ -5120,6 +5122,8 @@ void dp_txrx_path_stats(struct dp_soc *soc)
 			       pdev->soc->stats.rx.err.reo_err_oor_to_stack);
 		DP_PRINT_STATS("REO err oor msdu drop: %u",
 			       pdev->soc->stats.rx.err.reo_err_oor_drop);
+		DP_PRINT_STATS("Rx err msdu rejected: %d",
+			       soc->stats.rx.err.rejected);
 
 		DP_PRINT_STATS("Reo Statistics");
 		DP_PRINT_STATS("near_full: %u ", soc->stats.rx.near_full);
@@ -5647,6 +5651,9 @@ dp_print_soc_rx_stats(struct dp_soc *soc)
 
 	DP_PRINT_STATS("REO err oor msdu drop: %d",
 		       soc->stats.rx.err.reo_err_oor_drop);
+
+	DP_PRINT_STATS("Rx err msdu rejected: %d",
+		       soc->stats.rx.err.rejected);
 
 	for (i = 0; i < HAL_RXDMA_ERR_MAX; i++) {
 		index += qdf_snprint(&rxdma_error[index],
