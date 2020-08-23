@@ -127,7 +127,6 @@ enum uvdm_state {
 	USBPD_UVDM_AUTHENTICATION,
 	USBPD_UVDM_VERIFIED,
 	USBPD_UVDM_REMOVE_COMPENSATION,
-	USBPD_UVDM_REVERSE_AUTHEN,
 	USBPD_UVDM_CONNECT,
 	USBPD_UVDM_NAN_ACK,
 };
@@ -149,16 +148,8 @@ struct usbpd_vdm_data {
 	int ta_version;
 	int ta_temp;
 	int ta_voltage;
-	bool reauth;
 	unsigned long s_secert[USBPD_UVDM_SS_LEN];
 	unsigned long digest[USBPD_UVDM_SS_LEN];
 };
-
-#define USBPD_VOTER			"USBPD_VOTER"
-#define USBPD_INIT_VOTER		"USBPD_INIT_VOTER"
-#define USBPD_WEAK_PPS_POWER            22000000
-#define USBPD_LOW_PPS_POWER		45000000
-#define USBPD_WAKK_PPS_CURR_LIMIT       1800000
-#define PD_UNVERIFY_PASSTHROUGH_CURR	3000
 
 #endif /* _USBPD_H */
