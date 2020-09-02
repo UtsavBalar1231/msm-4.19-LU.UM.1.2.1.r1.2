@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2016-2019, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2020 XiaoMi, Inc.
  */
 
 #define pr_fmt(fmt)	"[drm:%s:%d] " fmt, __func__, __LINE__
@@ -209,7 +210,7 @@ static int _sde_fence_create_fd(void *fence_ctx, uint32_t val)
 	kref_get(&ctx->kref);
 
 	/* create fd */
-	fd = get_unused_fd_flags(0);
+	fd = get_unused_fd_start_flags(1, 0);
 	if (fd < 0) {
 		SDE_ERROR("failed to get_unused_fd_flags(), %s\n",
 							sde_fence->name);

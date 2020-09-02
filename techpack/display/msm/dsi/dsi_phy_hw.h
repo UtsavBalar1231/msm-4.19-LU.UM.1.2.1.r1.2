@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2015-2019, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2020 XiaoMi, Inc.
  */
 
 #ifndef _DSI_PHY_HW_H_
@@ -110,6 +111,7 @@ struct dsi_phy_cfg {
 	struct dsi_lane_map lane_map;
 	bool force_clk_lane_hs;
 	unsigned long bit_clk_rate_hz;
+	unsigned long clk_strength;
 };
 
 struct dsi_phy_hw;

@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2015-2019, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2020 XiaoMi, Inc.
  */
 
 #ifndef _SDE_HW_MDSS_H
@@ -545,6 +546,8 @@ struct sde_hw_cp_cfg {
 	u32 displayh;
 	struct sde_hw_dspp *dspp[DSPP_MAX];
 	bool broadcast_disabled;
+	u32 mi_dimlayer_type;
+	void *payload_clear;
 };
 
 /**
