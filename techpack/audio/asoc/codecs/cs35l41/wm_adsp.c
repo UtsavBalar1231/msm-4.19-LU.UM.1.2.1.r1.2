@@ -2261,7 +2261,6 @@ static int wm_adsp_load(struct wm_adsp *dsp)
 			snprintf(file, PAGE_SIZE,
 				 "%s", dsp->firmwares[dsp->fw].file);
 		else {
-//#if defined(CONFIG_TARGET_PRODUCT_UMI) || defined(CONFIG_TARGET_PRODUCT_CMI)
 #ifdef CONFIG_AUDIO_SMARTPA_STEREO
 			if(dsp->chip_revid == 0xB2) {
 				snprintf(file, PAGE_SIZE, "%s-%s%d-%s-revb2.wmfw",
@@ -3194,7 +3193,6 @@ static int wm_adsp_load_coeff(struct wm_adsp *dsp)
 		snprintf(file, PAGE_SIZE, "%s-dsp%d-%s.bin", dsp->part,
 			 dsp->num, dsp->firmwares[dsp->fw].binfile);
 	else
-//#if defined(CONFIG_TARGET_PRODUCT_UMI) || defined(CONFIG_TARGET_PRODUCT_CMI)
 #ifdef CONFIG_AUDIO_SMARTPA_STEREO
 		if(dsp->chip_revid == 0xB2) {
 			//for B2 chip
